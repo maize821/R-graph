@@ -1,0 +1,35 @@
+hisat2
+
+#建立索引
+hisat2-build –p 4 genome.fa genome（#输出的文件名称）
+
+#比对
+hisat2 [options]* -x <hisat2-idx> {-1 <m1> -2 <m2> | -U <r> |[-S <hit>]
+exp：hisat2 -p16 -x ./grch38_tran/genome_tran -1 SRR534293_1.fastq -2 SRR534293_2.fastq –S SRR534293.sam
+
+-x <hisat2-idx>
+参考基因组索引文件的前缀。
+-1 <m1>
+双端测序结果的第一个文件。若有多组数据，使用逗号将文件分隔。Reads的长度可以不一致。
+-2 <m2>
+双端测序结果的第二个文件。若有多组数据，使用逗号将文件分隔，并且文件顺序要和-1参数对应。Reads的长度可以不一致。
+-U <r>
+单端数据文件。若有多组数据，使用逗号将文件分隔。可以和-1、-2参数同时使用。Reads的长度可以不一致。
+-S <hit> 
+输出指定的SAM文件
+ 
+#BAM转SAM
+samtools view -h NA12878.bam > NA12878_2.sam 
+#SAM转BAM 
+samtools view -S seq.sam -b > seq.bam  #文件格式转换
+samtools sort seq.bam -0 seq_sorted.bam  ##将bam文件排序
+samtools index seq_sorted.bam  #对排序后对bam文件索引生成bai格式文件，用于快速随机处理。
+
+#对回帖bam文件进行质量评估
+**samtools falgstate **：统计bam文件中比对flag信息，然后输出比对结果
+samtools flagstate seq_sorted.bam > seq_sorted.flagstate
+
+#count 计算RNA-seq测序reads对在基因组中对比对深度。
+feature counts -T 6 -t exon -g gene_id -a <gencode.gtf> -o seq_featurecount.txt <seq.bam>
+
+#构建表达矩阵，在R语言环境下分析
